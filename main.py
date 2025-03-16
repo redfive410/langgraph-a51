@@ -80,7 +80,6 @@ llm_with_tools = ChatAnthropic(model="claude-3-5-sonnet-20240620").bind_tools([g
 # The second argument is the function or object that will be called whenever
 # the node is used.
 graph_builder.add_node("chatbot", chatbot)
-
 graph_builder.add_edge(START, "chatbot")
 
 tool_node = BasicToolNode(tools=[get_current_time])
@@ -98,12 +97,10 @@ graph_builder.add_conditional_edges(
     # e.g., "tools": "my_tools"
     {"tools": "tools", END: END},
 )
+
 # Any time a tool is called, we return to the chatbot to decide the next step
 graph_builder.add_edge("tools", "chatbot")
-graph_builder.add_edge(START, "chatbot")
 graph_builder.add_edge("chatbot", END)
-
-graph = graph_builder.compile()
 
 graph = graph_builder.compile()
 
