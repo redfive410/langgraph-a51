@@ -107,10 +107,12 @@ def end_game(state: State):
     print("\n----- GAME OVER -----")
     print(f"The correct answer was: {state['object_to_guess']}")
     print(f"Winner: {state['winner'] if state['winner'] else 'No one'}")
+    print(f"Questions asked: {len(state['questions_asked'])}")
+    print(f"Guess attempts: {state['guess_attempts']}")
     
-    print("\n----- CONVERSATION LOG -----")
-    for entry in state['conversation_log']:
-        print(entry)
+    #print("\n----- CONVERSATION LOG -----")
+    #for entry in state['conversation_log']:
+    #    print(entry)
     
     return {
         "message": f"Game Over! The correct answer was {state['object_to_guess']}. Winner: {state['winner'] if state['winner'] else 'No one'}"
@@ -155,9 +157,3 @@ initial_state: State = {
 
 # Run the game
 result = graph.invoke(initial_state, {"recursion_limit": 100})
-
-# Optionally, print the final state
-print("\n----- FINAL STATE -----")
-print(f"Questions asked: {len(result['questions_asked'])}")
-print(f"Guess attempts: {result['guess_attempts']}")
-print(f"Winner: {result['winner'] if result['winner'] else 'No one'}")
