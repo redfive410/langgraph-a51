@@ -19,6 +19,7 @@ class State(TypedDict):
     guess_attempts: int
     max_questions: int
     winner: str | None
+    conversation_log: list  # Added to track conversation
 
 # Bot 1: Asks a question
 def ask_question(state: State):
@@ -27,7 +28,15 @@ def ask_question(state: State):
     Based on previous answers: {questions}, ask a strategic Yes or No question."""
     
     response = openai_model.invoke([SystemMessage(content=prompt)])
-    return {"questions_asked": [response.content]}
+    question = response.content
+
+    # Log the question
+    print(f"\nQuestion {state['guess_attempts'] + 1}: {question}")
+
+    # Add to conversation log
+    state['conversation_log'].append(f"Q{state['guess_attempts'] + 1}: {question}")
+
+    return {"questions_asked": [question]}
 
 # Bot 2: Answers the question
 def answer_question(state: State):
@@ -38,7 +47,16 @@ def answer_question(state: State):
     response = openai_model.invoke([SystemMessage(content=prompt)])
     answer = response.content
 
-    state["questions_asked"][-1].content = f"""{state["questions_asked"][-1].content} {answer}"""
+    # Modify the question to include the answer
+    question_with_answer = f"{last_question} → {answer}"
+    state["questions_asked"][-1].content = question_with_answer
+    
+    # Log the answer
+    print(f"Answer: {answer}")
+    
+    # Add to conversation log
+    state['conversation_log'][-1] = f"Q{state['guess_attempts'] + 1}: {last_question} → {answer}"
+    
     return {"answer": answer}
 
 # Bot 1: Makes a guess after some questions
@@ -50,8 +68,15 @@ def make_guess(state: State):
     Now make a final guess at what the object is."""
     
     response = openai_model.invoke([SystemMessage(content=prompt)])
+    guess = response.content
     
-    return {"guesses_asked": response.content}
+    # Log the guess
+    print(f"Guess: {guess}")
+    
+    # Add to conversation log
+    state['conversation_log'].append(f"Guess {state['guess_attempts'] + 1}: {guess}")
+    
+    return {"guesses_asked": [guess]}
 
 def check_game_over(state: State):
     guess_attempts = state["guess_attempts"] + 1
@@ -60,9 +85,13 @@ def check_game_over(state: State):
     The guess is: [{state["guesses_asked"][-1].content}] Is the object mentioned in the guess? Please answer with Yes or No."""
     response = openai_model.invoke([SystemMessage(content=prompt)])
    
-    if "Yes" in response.content:
+    correct = "Yes" in response.content
+    
+    if correct:
+        print(f"Correct! The answer was: {state['object_to_guess']}")
         return {"winner": "Questioner", "guess_attempts": guess_attempts}
     else:
+        print(f"Incorrect. Moving to next question...")
         return {"guess_attempts": guess_attempts}
     
 # Check if game should continue
@@ -75,6 +104,16 @@ def router(state: State):
 
 # End Game Node
 def end_game(state: State):
+    print("\n----- GAME OVER -----")
+    print(f"The correct answer was: {state['object_to_guess']}")
+    print(f"Winner: {state['winner'] if state['winner'] else 'No one'}")
+    print(f"Questions asked: {len(state['questions_asked'])}")
+    print(f"Guess attempts: {state['guess_attempts']}")
+    
+    #print("\n----- CONVERSATION LOG -----")
+    #for entry in state['conversation_log']:
+    #    print(entry)
+    
     return {
         "message": f"Game Over! The correct answer was {state['object_to_guess']}. Winner: {state['winner'] if state['winner'] else 'No one'}"
     }
@@ -99,13 +138,22 @@ builder.add_conditional_edges("check_game_over", router, {"ask_question": "ask_q
 # Compile and Run
 graph = builder.compile()
 
+# Print game information
+print("\n===== 20 QUESTIONS GAME =====")
+object_to_guess = random.choice(["bird", "chair", "refrigerator", "ball", "table", "computer", "book", "phone", "car", "tree"])
+print(f"Object to guess (hidden from player): {object_to_guess}")
+print(f"Maximum questions: 10")
+print("Game starting...\n")
+
 initial_state: State = {
-    "object_to_guess": random.choice(["bird", "chair", "refrigerator", "ball", "table"]),
+    "object_to_guess": object_to_guess,
     "questions_asked": [],
     "guesses_asked": [],
     "guess_attempts": 0,
-    "max_questions": 5,
+    "max_questions": 10,
     "winner": None,
+    "conversation_log": []  # Initialize conversation log
 }
 
-graph.invoke(initial_state)
+# Run the game
+result = graph.invoke(initial_state, {"recursion_limit": 100})
