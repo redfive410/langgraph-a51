@@ -2,6 +2,13 @@ https://langchain-ai.github.io/langgraph/tutorials/introduction/
 
 https://app.tavily.com/home
 
+## 20APR2025
+https://platform.openai.com/docs/guides/responses-vs-chat-completions
+
+OpenAI responses api does not work for Gemini models. Only the completions api is configured at this time.
+
+Switch back to langchain_openai
+
 ## 17APR2025
 The first graph (with the central router node) actually helps solve the recursion limit issue you were experiencing, despite looking more complex visually. Here's why:
 Why the Router Pattern (Image 1) Helps with Recursion Limits:
