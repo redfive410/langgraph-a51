@@ -31,7 +31,7 @@ def ask_question(state: State):
     prompt = f"""Based on previous answers: {questions}, ask a strategic Yes or No question."""
     
     response = llm.responses.create(
-        model="gpt-4.1",
+        model="gpt-4-turbo",
         input=[
             {"role": "system", "content": "You are playing 20 Questions. You need to guess the object that the other AI is thinking of."},
             {"role": "user","content": prompt }
@@ -103,10 +103,10 @@ def check_game_over(state: State):
     current_round = state["current_round"]
      
     prompt = f""" The object to guess is: [{state["object_to_guess"].lower()}]
-    The guess is: [{state["guesses_asked"][-1].content}] Is the object mentioned in the guess? """
+    The guess is: [{state["guesses_asked"][-1].content}] Is the object mentioned in the guess?"""
     
     response = llm.responses.create(
-        model="gpt-4-turbo",
+        model="gpt-4.1",
         input=[
             {"role": "system", "content": "You are the judge of 20 questions. Please answer with Yes or No."},
             {"role": "user","content": prompt }
@@ -191,8 +191,7 @@ graph = builder.compile()
 print("\n===== 20 QUESTIONS GAME =====")
 object_to_guess = random.choice(["bird", "chair", "refrigerator", "ball", "table", "computer", "book", "phone", "car", "tree"])
 print(f"Object to guess (hidden from player): {object_to_guess}")
-print(f"Maximum rounds: 10")
-print("Game starting...\n")
+print("Game starting...")
 
 initial_state: State = {
     "object_to_guess": object_to_guess,
