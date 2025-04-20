@@ -99,7 +99,7 @@ def make_guess(state: State):
     ]
 
     response = llm.invoke(messages)
-    guess = response.content
+    guess = response.content.strip()
    
     # Log the guess
     print(f"Guess: {guess}")
